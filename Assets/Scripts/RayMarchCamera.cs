@@ -5,8 +5,8 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class RayMarchCamera : SceneViewFilter
 {
-    [SerializeField]
-    private Shader _shader;
+    public Shader _shader;
+    public Camera _camera;
 
     private Material _rayMarchMat;
     public Material _rayMarchMaterial {
@@ -17,17 +17,6 @@ public class RayMarchCamera : SceneViewFilter
                 _rayMarchMat.hideFlags = HideFlags.HideAndDontSave;
             }
             return _rayMarchMat;
-        }
-    }
-
-    private Camera _cam;
-    public Camera _camera {
-        get {
-            if (!_cam)
-            {
-                _cam = GetComponent<Camera>();
-            }
-            return _cam;
         }
     }
 
@@ -149,8 +138,6 @@ public class RayMarchCamera : SceneViewFilter
         AddSpheres();
         AddMandelbox();
         AddMandelbulb();
-
-        //RenderTexture.active = destination;
 
         AddMainTexture(myRenderTexture);
 

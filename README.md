@@ -8,6 +8,7 @@ Features:
 - Fog
 - Colors
 - Infinite repetition
+- Smoothing/Blending, Intersection, Union 
 
 SDF:
 - Plane, Sphere, Cube
