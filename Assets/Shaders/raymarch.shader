@@ -34,7 +34,6 @@
             uniform float _lightIntensity;
             //Color
             uniform fixed4 _groundColor;
-            uniform fixed4 _sphereColors[8];
             uniform float _colorIntensity;
             //Shadow
             uniform float2 _shadowDistance;
@@ -49,28 +48,31 @@
             uniform float _reflectionIntensity;
             uniform float _envReflectionIntensity;
             uniform samplerCUBE _reflectionCube;
-            //FOG
+            //Fog
             uniform float3 _fogColor;
             uniform float _fogIntensity;
             uniform float _fogMinDistance;
             uniform float _fogMaxDistance;
-            //SDF
-            //uniform float _box1Round, _boxSphereSmooth, _sphereIntersectSmooth;
-            //uniform float4 _sphere1, _sphere2, _box1;
 
+            uniform float3 _repeatInterval;
+
+            //Spheres
             uniform float4 _sphere;
-            uniform float3 _sphereModInterval;
             uniform float _sphereSmooth;
-            uniform float _degreeRotate;
-
+            uniform float _sphereRotate;
+            uniform int _sphereRepeat;
+            uniform fixed4 _sphereColors[8];
+            //Mandelbulb
             uniform float4 _mandelbulb;
             uniform int _mandelbulbIterations;
             uniform fixed4 _mandelbulbColor;
             uniform int _mandelbulbExponent;
-
+            uniform int _mandelbulbRepeat;
+            //Mandelbox
             uniform float4 _mandelbox;
             uniform int _mandelboxIterations;
             uniform fixed4 _mandelboxColor;
+            uniform int _mandelboxRepeat;
 
             struct appdata
             {
@@ -112,20 +114,24 @@
 
             void applyMod(inout float3 p)
             {
-                float modX = pMod(p.x, _sphereModInterval.x);
-                float modY = pMod(p.y, _sphereModInterval.y);
-                float modZ = pMod(p.z, _sphereModInterval.z);
+                float modX = repeat(p.x, _repeatInterval.x);
+                float modY = repeat(p.y, _repeatInterval.y);
+                float modZ = repeat(p.z, _repeatInterval.z);
+
+                //TODO: Noise
             }
 
             void addMandelbulb(inout float4 result, float3 p, bool mod)
             {
                 if (mod) { applyMod(p); }
+                else { p.y = -p.y; }
                 result = opU(result, float4(_mandelbulbColor.rgb, deMandelbulb(p - _mandelbulb.xyz, _mandelbulb.w, _mandelbulbIterations, _mandelbulbExponent)));
             }
 
             void addMandelbox(inout float4 result, float3 p, bool mod)
             {
                 if (mod) { applyMod(p); }
+                else { p.y = -p.y; }
                 result = opU(result, float4(_mandelboxColor.rgb, deMandelbox(p - _mandelbox.xyz, _mandelbox.w, _mandelboxIterations)));
             }
 
@@ -136,7 +142,7 @@
                 float4 sphere = float4(_sphereColors[0].rgb, sdSphere(p - _sphere.xyz, _sphere.w));
                 for (int i = 1; i < 8; i++) 
                 {
-                    float4 sphereAdd = float4(_sphereColors[i].rgb, sdSphere(RotateY(p, _degreeRotate * i) - _sphere.xyz, _sphere.w));
+                    float4 sphereAdd = float4(_sphereColors[i].rgb, sdSphere(RotateY(p, _sphereRotate * i) - _sphere.xyz, _sphere.w));
                     sphere = opUS(sphere, sphereAdd, _sphereSmooth);
                 }
                 result = opU(result, sphere);
@@ -146,9 +152,9 @@
             {
                 float4 result = float4(_groundColor.rgb, sdPlane(p, float4(0, 1, 0, 0))); //ground
 
-                addEightSphere(result, p, false);
-                addMandelbox(result, p, true);
-                addMandelbulb(result, p, true);
+                addEightSphere(result, p, _sphereRepeat > 0 ? true : false);
+                addMandelbox(result, p, _mandelboxRepeat > 0 ? true : false);
+                addMandelbulb(result, p, _mandelbulbRepeat > 0 ? true : false);
 
                 return result;
             }

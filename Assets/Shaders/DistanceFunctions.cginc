@@ -33,11 +33,11 @@ float deMandelbulb(float3 p, float w, int numIterations, float exponent)
 		if (r > 1.5) { break; }
 
 		//To polar
-		float theta = acos(c.z/r);
+		float theta = acos(c.z / r);
 		float psi = atan2(c.y, c.x);
 		dr = pow(r, exponent - 1.0) * exponent * dr + 1.0;
 
-		//Scale, rotate
+		//Scale & Rotate
 		float zr = pow(r, exponent * w);
 		theta *= exponent * w;
 		psi *= exponent * w;
@@ -49,11 +49,12 @@ float deMandelbulb(float3 p, float w, int numIterations, float exponent)
 
 		c += p;
 	}
-	return 0.5*log(r) * r / dr;
+	return 0.5 * log(r) * r / dr;
 }
 
 // MANDEL BOX
 
+// Sphere Inversion
 void sphereFold(inout float3 z, inout float dz) {
 	float r2 = dot(z,z);
 	if (r2<5.0) { 
@@ -69,6 +70,7 @@ void sphereFold(inout float3 z, inout float dz) {
 	}
 }
 
+// Reflect
 void boxFold(inout float3 z, inout float dz) {
 	z = clamp(z, -1.0, 1.0) * 2.0 - z;
 }
@@ -78,8 +80,8 @@ float deMandelbox(float3 p, float w, int numIterations)
 	float3 offset = p;
 	float dr = 1.0;
 	for (int n = 0; n < numIterations; n++) {
-		boxFold(p, dr);       // Reflect
-		sphereFold(p, dr);    // Sphere Inversion
+		boxFold(p, dr);
+		sphereFold(p, dr);
 		p = w * p + offset;  // Scale & Translate
 		dr = dr * abs(w) + 1.0;
 	}
@@ -110,7 +112,7 @@ float opI(float d1, float d2)
 }
 
 // Mod Position Axis
-float pMod (inout float p, float size)
+float repeat(inout float p, float size)
 {
 	float halfsize = size * 0.5;
 	float c = floor((p + halfsize) / size);

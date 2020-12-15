@@ -1,6 +1,4 @@
 ﻿using Assets.Scripts;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Camera))]
@@ -33,102 +31,83 @@ public class RayMarchCamera : SceneViewFilter
         }
     }
 
-    private Transform _mb;
-    public Transform _mandelbulb {
-        get {
-            if (!_mb)
-            {
-                _mb = GameObject.FindGameObjectWithTag("Mandelbulb").GetComponent<Transform>();
-            }
-            return _mb;
-        }
-    }
-
-    private Transform _mbox;
-    public Transform _mandelbox {
-        get {
-            if (!_mbox)
-            {
-                _mbox = GameObject.FindGameObjectWithTag("Mandelbox").GetComponent<Transform>();
-            }
-            return _mbox;
-        }
-    }
-
-    private Transform _sp;
-    public Transform _sphere {
-        get {
-            if (!_sp)
-            {
-                _sp = GameObject.FindGameObjectWithTag("Sphere").GetComponent<Transform>();
-            }
-            return _sp;
-        }
-    }
-
     [Header("Setup")]
-    public float _maxDistance;
+    public float _maxDistance = 1000f;
     [Range(1, 500)]
-    public int _maxIterations;
+    public int _maxIterations = 250;
     [Range(0.1f, 0.001f)]
-    public float _accuracy;
+    public float _accuracy = 0.01f;
+    public Vector3 _repeatInterval = new Vector3(40f, 40f, 40f);
 
     [Header("Directional Light")]
     public Transform _lightDir;
-    public Color _lightColor;
-    public float _lightIntensity;
+    public Color _lightColor = new Color(0.81f, 0.79f, 0.36f);
+    [Range(0, 4)]
+    public float _lightIntensity = 1.5f;
 
     [Header("Shadow")]
     [Range(1, 128)]
-    public float _shadowPenumbra;
-    public Vector2 _shadowDistance;
+    public float _shadowPenumbra = 96;
+    public Vector2 _shadowDistance = new Vector2(0.1f, 100f);
     [Range(0, 4)]
-    public float _shadowIntensity;
+    public float _shadowIntensity = 1f;
 
     [Header("Ambient Occlusion")]
     [Range(0.01f, 10.0f)]
-    public float _ambientOcclusionStepSize;
+    public float _ambientOcclusionStepSize = 0.3f;
     [Range(0f, 1f)]
-    public float _ambientOcclusionIntensity;
+    public float _ambientOcclusionIntensity = 0.275f;
     [Range(1, 5)]
-    public int _ambientOcclusionIterations;
+    public int _ambientOcclusionIterations = 3;
 
     [Header("Reflection")]
     [Range(0, 4)]
-    public int _reflectionCount;
+    public int _reflectionCount = 2;
     [Range(0f, 1f)]
-    public float _reflectionIntensity;
+    public float _reflectionIntensity = 0.15f;
     [Range(0f, 1f)]
-    public float _envReflectionIntensity;
+    public float _envReflectionIntensity = 0.5f;
     public Cubemap _reflectionCube;
 
     [Header("Fog")]
     [Range(0f, 1f)]
-    public float _fogIntensity;
-    public Color _fogColor;
-    public float _fogMinDistance;
-    public float _fogMaxDistance;
+    public float _fogIntensity = 0.5f;
+    public Color _fogColor = new Color(0.6f, 0.11f, 0.4f);
+    [Range(1f, 5000f)]
+    public float _fogMinDistance = 50f;
+    [Range(1f, 5000f)]
+    public float _fogMaxDistance = 250f;
 
     [Header("Mandelbulb")]
+    public Transform _mandelbulb;
     public float _mandelbulbW;
     [Range(1, 15)]
     public int _mandelbulbIterations;
+    [Range(1, 100)]
     public int _mandelbulbExponent;
-    public Color _mandelbulbColor;
+    public Color _mandelbulbColor = new Color(0.82f, 0.41f, 0.45f);
+    public bool _mandelbulbRepeat = true;
 
     [Header("Mandelbox")]
-    public float _mandelboxW;
+    public Transform _mandelbox;
+    [Range(0f, 10f)]
+    public float _mandelboxW = 2f;
     [Range(1, 10)]
-    public int _mandelboxIterations;
-    public Color _mandelboxColor;
+    public int _mandelboxIterations = 6;
+    public Color _mandelboxColor = new Color(0.57f, 0.92f, 0.57f);
+    public bool _mandelboxRepeat = true;
 
     [Header("Spheres")]
-    public float _sphereW;
+    public Transform _sphere;
+    [Range(0f, 100f)]
+    public float _sphereRadius = 3f;
     [Range(0f, 30f)]
-    public float _sphereSmooth;
-    public float _degreeRotate;
-    public Vector3 _sphereModInterval;
+    public float _sphereSmooth = 12f;
+    [Range(0f, 360f)]
+    public float _sphereRotate = 45f;
     public Gradient _sphereGradient;
+    public bool _sphereRepeat = false;
+
     private Color[] _sphereColors = new Color[8];
 
     [Header("Color")]
@@ -137,14 +116,23 @@ public class RayMarchCamera : SceneViewFilter
     [Range(0, 4)]
     public float _colorIntensity;
 
-    private void OnRenderImage(RenderTexture source, RenderTexture destination)
+    RenderTexture myRenderTexture;
+    void OnPreRender()
     {
-        if (!_rayMarchMaterial)
-        {
-            Graphics.Blit(source, destination);
-            return;
-        }
+        myRenderTexture = RenderTexture.GetTemporary(Screen.width, Screen.height, 16);
+        _camera.targetTexture = myRenderTexture;
+    }
+    void OnPostRender()
+    {
+        RayMarch();
 
+        _camera.targetTexture = null; //null means framebuffer
+        Graphics.Blit(myRenderTexture, null as RenderTexture, _rayMarchMaterial, 0);
+        RenderTexture.ReleaseTemporary(myRenderTexture);
+    }
+
+    private void RayMarch()
+    {
         for (int i = 0; i < _sphereColors.Length; i++)
         {
             _sphereColors[i] = _sphereGradient.Evaluate((1f / _sphereColors.Length) * i);
@@ -162,9 +150,9 @@ public class RayMarchCamera : SceneViewFilter
         AddMandelbox();
         AddMandelbulb();
 
-        RenderTexture.active = destination;
+        //RenderTexture.active = destination;
 
-        AddMainTexture(source);
+        AddMainTexture(myRenderTexture);
 
         GL.PushMatrix();
         GL.LoadOrtho();
@@ -219,6 +207,8 @@ public class RayMarchCamera : SceneViewFilter
         _rayMarchMaterial.Add(nameof(_maxDistance), _maxDistance);
         _rayMarchMaterial.Add(nameof(_maxIterations), _maxIterations);
         _rayMarchMaterial.Add(nameof(_accuracy), _accuracy);
+
+        _rayMarchMaterial.Add(nameof(_repeatInterval), _repeatInterval);
     }
 
     private void AddShadow()
@@ -255,6 +245,7 @@ public class RayMarchCamera : SceneViewFilter
         _rayMarchMaterial.Add(nameof(_mandelbulbIterations), _mandelbulbIterations);
         _rayMarchMaterial.Add(nameof(_mandelbulbExponent), _mandelbulbExponent);
         _rayMarchMaterial.Add(nameof(_mandelbulbColor), _mandelbulbColor);
+        _rayMarchMaterial.Add(nameof(_mandelbulbRepeat), _mandelbulbRepeat ? 1 : 0);
     }
 
     private void AddMandelbox()
@@ -262,16 +253,16 @@ public class RayMarchCamera : SceneViewFilter
         _rayMarchMaterial.Add(nameof(_mandelbox), new Vector4(_mandelbox.position.x, -_mandelbox.position.y, _mandelbox.position.z, _mandelboxW));
         _rayMarchMaterial.Add(nameof(_mandelboxIterations), _mandelboxIterations);
         _rayMarchMaterial.Add(nameof(_mandelboxColor), _mandelboxColor);
+        _rayMarchMaterial.Add(nameof(_mandelboxRepeat), _mandelboxRepeat ? 1 : 0);
     }
 
     private void AddSpheres()
     {
-        _rayMarchMaterial.Add(nameof(_sphere), new Vector4(_sphere.position.x, -_sphere.position.y, _sphere.position.z, _sphereW));
+        _rayMarchMaterial.Add(nameof(_sphere), new Vector4(_sphere.position.x, -_sphere.position.y, _sphere.position.z, _sphereRadius));
         _rayMarchMaterial.Add(nameof(_sphereSmooth), _sphereSmooth);
-        _rayMarchMaterial.Add(nameof(_degreeRotate), _degreeRotate);
+        _rayMarchMaterial.Add(nameof(_sphereRotate), _sphereRotate);
         _rayMarchMaterial.Add(nameof(_sphereColors), _sphereColors);
-
-        _rayMarchMaterial.Add(nameof(_sphereModInterval), _sphereModInterval);
+        _rayMarchMaterial.Add(nameof(_sphereRepeat), _sphereRepeat ? 1 : 0);
 }
 
     private Matrix4x4 CamFrustum(Camera cam)
