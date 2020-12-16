@@ -153,7 +153,7 @@
                 float4 result = float4(_groundColor.rgb, sdPlane(p, float4(0, 1, 0, 0))); //ground
 
                 addEightSphere(result, p, _sphereRepeat > 0 ? true : false);
-                addMandelbox(result, p, _mandelboxRepeat > 0 ? true : false);
+                //addMandelbox(result, p, _mandelboxRepeat > 0 ? true : false);
                 addMandelbulb(result, p, _mandelbulbRepeat > 0 ? true : false);
 
                 return result;

@@ -75,7 +75,7 @@ void boxFold(inout float3 z, inout float dz) {
 	z = clamp(z, -1.0, 1.0) * 2.0 - z;
 }
 
-float deMandelbox(float3 p, float w, int numIterations)
+float deMandelbox(in float3 p, in float w, int numIterations)
 {
 	float3 offset = p;
 	float dr = 1.0;

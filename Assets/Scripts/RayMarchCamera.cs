@@ -68,7 +68,7 @@ public class RayMarchCamera : SceneViewFilter
     public float _fogMaxDistance = 250f;
 
     [Header("Mandelbulb")]
-    public Transform _mandelbulb;
+    public Vector3 _mandelbulb;
     public float _mandelbulbW;
     [Range(1, 15)]
     public int _mandelbulbIterations;
@@ -78,7 +78,7 @@ public class RayMarchCamera : SceneViewFilter
     public bool _mandelbulbRepeat = true;
 
     [Header("Mandelbox")]
-    public Transform _mandelbox;
+    public Vector3 _mandelbox;
     [Range(0f, 10f)]
     public float _mandelboxW = 2f;
     [Range(1, 10)]
@@ -87,7 +87,7 @@ public class RayMarchCamera : SceneViewFilter
     public bool _mandelboxRepeat = true;
 
     [Header("Spheres")]
-    public Transform _sphere;
+    public Vector3 _sphere;
     [Range(0f, 100f)]
     public float _sphereRadius = 3f;
     [Range(0f, 30f)]
@@ -228,7 +228,7 @@ public class RayMarchCamera : SceneViewFilter
 
     private void AddMandelbulb()
     {
-        _rayMarchMaterial.Add(nameof(_mandelbulb), new Vector4(_mandelbulb.position.x, -_mandelbulb.position.y, _mandelbulb.position.z, _mandelbulbW));
+        _rayMarchMaterial.Add(nameof(_mandelbulb), new Vector4(_mandelbulb.x, -_mandelbulb.y, _mandelbulb.z, _mandelbulbW));
         _rayMarchMaterial.Add(nameof(_mandelbulbIterations), _mandelbulbIterations);
         _rayMarchMaterial.Add(nameof(_mandelbulbExponent), _mandelbulbExponent);
         _rayMarchMaterial.Add(nameof(_mandelbulbColor), _mandelbulbColor);
@@ -237,7 +237,7 @@ public class RayMarchCamera : SceneViewFilter
 
     private void AddMandelbox()
     {
-        _rayMarchMaterial.Add(nameof(_mandelbox), new Vector4(_mandelbox.position.x, -_mandelbox.position.y, _mandelbox.position.z, _mandelboxW));
+        _rayMarchMaterial.Add(nameof(_mandelbox), new Vector4(_mandelbox.x, -_mandelbox.y, _mandelbox.z, _mandelboxW));
         _rayMarchMaterial.Add(nameof(_mandelboxIterations), _mandelboxIterations);
         _rayMarchMaterial.Add(nameof(_mandelboxColor), _mandelboxColor);
         _rayMarchMaterial.Add(nameof(_mandelboxRepeat), _mandelboxRepeat ? 1 : 0);
@@ -245,7 +245,7 @@ public class RayMarchCamera : SceneViewFilter
 
     private void AddSpheres()
     {
-        _rayMarchMaterial.Add(nameof(_sphere), new Vector4(_sphere.position.x, -_sphere.position.y, _sphere.position.z, _sphereRadius));
+        _rayMarchMaterial.Add(nameof(_sphere), new Vector4(_sphere.x, -_sphere.y, _sphere.z, _sphereRadius));
         _rayMarchMaterial.Add(nameof(_sphereSmooth), _sphereSmooth);
         _rayMarchMaterial.Add(nameof(_sphereRotate), _sphereRotate);
         _rayMarchMaterial.Add(nameof(_sphereColors), _sphereColors);
